@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+
+<link href="https://fonts.googleapis.com/css?family=Faster+One" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.css">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.min.css">
+<style>
+.app_alarmList__container{
+    background-color: ghostwhite;
+    min-height: 100vh;
+    padding-top: 2vh;
+    text-align: center;
+}
+.app_alarmListHeader {
+    height: 9vh;
+    background-color: black;
+    font-size: 5vmin;
+    display: flex;
+    justify-content: center;
+    padding: 1vmin;
+   }
+.fat {
+    font-family: 'faster one';
+    font-size: 7vmin;
+    line-height: initial;
+    padding: 0 0.8vmin;
+}
+.time_text {
+    color: #32dc32;
+    font-weight: bold;
+}
+.done {
+    text-decoration: line-through;
+    color: gainsboro;
+    font-weight: initial;
+}
+li {
+    display:flex;
+    justify-content: space-between;
+}
+li span {
+    width: 30vmin;
+}
+li > :first-child {
+    text-align: left;
+}
+</style>
+</head>
+<body>
+    <header class="app_alarmListHeader">
+    <span class="fat">FAT</span> 
+    Metabolic Diet Eats Alarm &#128276;</header>
+    <section class="app_alarmList__container container">
+        <ul>
+            <li class="desayuno">
+                <span>Desayuno</span>
+                <span class="time_text time__desayuno"></span>
+                <span class="audio__container audio__desayuno">
+                    
+                </span>
+            </li>
+            <li class="tentenpie">
+                <span>tentenpie</span>
+                <span class="time_text time__tentenpie"></span>
+                <span class="audio__container audio__tentenpie">
+                    
+                </span>
+            </li>
+            <li class="almuerzo">
+                <span>almuerzo</span>
+                <span class="time_text time__almuerzo"></span>
+                <span class="audio__container audio__almuerzo">
+                    
+                </span>
+            </li>
+            <li class="merienda">
+                <span>merienda</span>
+                <span class="time_text time__merienda"></span>
+                <span class="audio__container audio__merienda">
+                    
+                </span>
+            </li>
+            <li class="cena">
+                <span>cena</span>
+                <span class="time_text time__cena"></span>
+                <span class="audio__container audio__cena">
+                    
+                </span>
+            </li>
+       </ul>
+       <button id="initDay">Start Day</button>
+    </section>
+    <script>
+        var app = {};
+        app._second = 1000;
+        app._minute = 60 * app._second;
+        app._hour = 60 * app._minute;
+        app._halfHour = 30 * app._minute;
+        app._fullDayDuration = app._hour * 24;
+        var startButton = document.getElementById('initDay');
+        startButton.addEventListener('click', () => {
+            app.createAlarmList( app.serieOfEats() )
+        });
+        ///////
+        app.createAlarmList = (alarmList) => {
+
+            var suena = 3000; 
+            for ( moment in alarmList){
+                var el_time = document.querySelector(`.time__${moment}`);
+                el_time.innerText = alarmList[moment].metric + 'Hs';
+                app.createAlarm( alarmList[moment].utc, moment);
+                suena = suena +3000;
+            }
+        };
+        
+        app.createAlarm = (startTime, target) => {
+            console.log( target + ' => ' + startTime);
+
+            setTimeout( () =>{
+                var el_audio = document.querySelector(`.audio__${target}`);
+                var el_time = document.querySelector(`.time__${target}`);
+                var audio = document.createElement("audio");
+                audio.setAttribute('autoplay', 'true');
+                audio.setAttribute('controls', 'true');
+                audio.setAttribute('style', 'width: 65px;');
+                audio.setAttribute('src', 'alarm.mp3');
+                el_audio.appendChild(audio);
+
+                el_time.setAttribute('class', 'done');
+            }, startTime);
+        };
+
+        app.serieOfEats = () =>{
+            app._firstEatOfDay = new Date();
+            app._today = new Date(app._firstEatOfDay.getFullYear(), app._firstEatOfDay.getMonth(), app._firstEatOfDay.getDate(), 0, 0, 0, 0);
+            app._now = new Date();
+            app._startTime_utc = app._hour * app._now.getHours();
+            app._startTime_metric = app._now.getHours() + ':' + app._now.getMinutes();
+            app._availableTime_utc = ( app._today.getTime() + app._fullDayDuration ) - app._firstEatOfDay.getTime();
+            app._availableTime_metric = app._fullDayDuration - app._startTime;
+
+            /**
+             * SETTING TIMES
+             */
+            var desayuno = new Date(app._now.getTime() + app._halfHour);
+            var tentenpie = new Date(app._nextEat(desayuno.getTime()));
+            var almuerzo = new Date(app._nextEat(tentenpie.getTime()));
+            var merienda = new Date(app._nextEat(almuerzo.getTime()));
+            var cena = new Date(app._nextEat(merienda.getTime()));
+
+            return {
+                desayuno: {
+                    metric: desayuno.getHours() + ':' + desayuno.getMinutes(),
+                    utc: desayuno.getTime()
+                },
+                tentenpie: {
+                    metric: tentenpie.getHours() + ':' + tentenpie.getMinutes(),
+                    utc: tentenpie.getTime()
+                },
+                almuerzo: {
+                    metric: almuerzo.getHours() + ':' + almuerzo.getMinutes(),
+                    utc: almuerzo.getTime()
+                },
+                merienda: {
+                    metric: merienda.getHours() + ':' + merienda.getMinutes(),
+                    utc: merienda.getTime()
+                },
+                cena: {
+                    metric: cena.getHours() + ':' + cena.getMinutes(),
+                    utc: cena.getTime()
+                }
+            }
+        };
+
+        app._nextEat = (now) => { 
+            var nexTime = now + ( (3 * app._hour) + app._halfHour );
+            return nexTime;
+        };
+    </script>
+</body>
+</html>
